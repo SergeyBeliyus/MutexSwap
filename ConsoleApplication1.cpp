@@ -6,14 +6,13 @@
 
 class Data {
 public:
+	std::vector<int> data;
+	std::mutex m;
 	Data(std::vector<int> data) : data{ data } {}
 private:
 	friend void swap1(Data& lhs, Data& rhs);
 	friend void swap2(Data& lhs, Data& rhs);
 	friend void swap3(Data& lhs, Data& rhs);
-
-	std::vector<int> data;
-	std::mutex m;
 };
 
 void swap1(Data& lhs, Data& rhs);
@@ -38,8 +37,14 @@ int main()
 
 void swap1(Data& lhs, Data& rhs)
 {
+	std::vector<int> data0{};
+	Data t(data0);
+
 	lhs.m.lock();
 	rhs.m.lock();
+	t.data = lhs.data;
+	lhs.data = rhs.data;
+	rhs.data = t.data;
 	std::cout << "Thread's id: " << std::this_thread::get_id() << '\n';
 	lhs.m.unlock();
 	rhs.m.unlock();
@@ -47,14 +52,24 @@ void swap1(Data& lhs, Data& rhs)
 
 void swap2(Data& lhs, Data& rhs)
 {
+	std::vector<int> data0{};
+	Data t(data0);
 	std::scoped_lock lock(lhs.m, rhs.m);
+	t.data = lhs.data;
+	lhs.data = rhs.data;
+	rhs.data = t.data;
 	std::cout << "Thread's id: " << std::this_thread::get_id() << '\n';
 }
 
 void swap3(Data& lhs, Data& rhs)
 {
+	std::vector<int> data0{};
+	Data t(data0);
 	std::unique_lock ul1(lhs.m);
 	std::unique_lock ul2(rhs.m);
+	t.data = lhs.data;
+	lhs.data = rhs.data;
+	rhs.data = t.data;
 	std::cout << "Thread's id: " << std::this_thread::get_id() << '\n';
 	ul1.unlock();
 	ul2.unlock();
